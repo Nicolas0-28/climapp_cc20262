@@ -74,7 +74,7 @@ class _ListCityScreenState extends State<ListCityScreen> {
                         return CityTileWidget(
                           cityName: city.cityName,
                           icon: city.conditionSlug,
-                          temperature: city.temp,
+                          temperature: int.tryParse(city.temp) ?? 0,
                           onTap: () {
                             Navigator.push(
                               context,
