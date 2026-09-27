@@ -4,16 +4,21 @@ import 'dart:io';
 import 'package:climapp_cc20262/src/models/weather_forecast_model.dart';
 import 'package:climapp_cc20262/src/services/device_info_service.dart';
 import 'package:climapp_cc20262/src/services/weather_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
 class ListCityController extends ChangeNotifier {
   ListCityController({
     required this.deviceInfoService,
     required this.weatherService,
-  });
+  }) {
+    _initConnectivityListener();
+  }
 
   final WeatherService weatherService;
   final DeviceInfoService deviceInfoService;
+
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   String _deviceCountry = '';
   String get deviceCountry => _deviceCountry;
@@ -31,6 +36,25 @@ class ListCityController extends ChangeNotifier {
     'Curitiba,PR',
   ];
 
+  // Monitora a rede em tempo real
+  void _initConnectivityListener() {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      if (results.contains(ConnectivityResult.none)) {
+        // Sem internet
+        errorMessage = 'Sua conexão com a internet caiu!';
+        isLoading = false;
+        notifyListeners();
+      } else {
+        // Conexão reestabelecida
+        if (hasError || allCities.isEmpty) {
+          loadCities();
+        }
+      }
+    });
+  }
+
   Future<void> loadCities() async {
     isLoading = true;
     errorMessage = '';
@@ -41,17 +65,11 @@ class ListCityController extends ChangeNotifier {
       allCities = await weatherService.getWeatherForecast(listCitySearch);
       filteredCities = List.from(allCities);
     } on TimeoutException catch (e) {
-      errorMessage =
-          e.message ??
-          'Falha na conexão. Verifique sua internet e tente novamente.';
+      errorMessage = e.message ?? 'A conexão demorou muito para responder.';
     } on HttpException catch (e) {
-      debugPrint('====================================');
       errorMessage = e.message;
-      debugPrint(errorMessage);
-      debugPrint('====================================');
     } catch (e) {
-      errorMessage = 'Ocorreu um erro inesperado ao carregar os dados.';
-      debugPrint(e.toString());
+      errorMessage = 'Sem conexão com a internet.';
     } finally {
       isLoading = false;
       notifyListeners();
@@ -69,5 +87,11 @@ class ListCityController extends ChangeNotifier {
           .toList();
     }
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
   }
 }
