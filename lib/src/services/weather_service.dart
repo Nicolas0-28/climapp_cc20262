@@ -26,10 +26,8 @@ class WeatherService {
               );
             },
           );
-      print("Status da API: ${response.statusCode}");
-      print("Resposta da API: ${response.body}");
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.statusCode == 200) {
         final jsonDecoded = jsonDecode(response.body)['results'];
         final model = WeatherForecastModel.fromJson(jsonDecoded);
         listCity.add(model);
