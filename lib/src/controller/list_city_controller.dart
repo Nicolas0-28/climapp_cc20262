@@ -22,32 +22,36 @@ class ListCityController extends ChangeNotifier {
   bool isLoading = true;
   String errorMessage = '';
 
+  bool get hasError => errorMessage.isNotEmpty;
+
   final listCitySearch = [
     'Aracaju,SE',
     'Itabaiana,SE',
     'Salvador,BA',
     'Curitiba,PR',
   ];
+
   Future<void> loadCities() async {
     isLoading = true;
     errorMessage = '';
     notifyListeners();
 
-    _deviceCountry = await deviceInfoService.getDeviceCountry();
-
     try {
+      _deviceCountry = await deviceInfoService.getDeviceCountry();
       allCities = await weatherService.getWeatherForecast(listCitySearch);
       filteredCities = List.from(allCities);
     } on TimeoutException catch (e) {
       errorMessage =
-          e.message ?? 'Deu ruim nas internet, vá botar crédito seu pobre';
+          e.message ??
+          'Falha na conexão. Verifique sua internet e tente novamente.';
     } on HttpException catch (e) {
       debugPrint('====================================');
       errorMessage = e.message;
       debugPrint(errorMessage);
       debugPrint('====================================');
     } catch (e) {
-      print(e);
+      errorMessage = 'Ocorreu um erro inesperado ao carregar os dados.';
+      debugPrint(e.toString());
     } finally {
       isLoading = false;
       notifyListeners();

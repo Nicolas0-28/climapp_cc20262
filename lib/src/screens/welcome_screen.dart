@@ -34,7 +34,9 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ListCityScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const ListCityScreen(),
+                      ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
